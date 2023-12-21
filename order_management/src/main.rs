@@ -24,7 +24,7 @@ lazy_static! {
         if let Ok(url) = std::env::var("DATABASE_URL") {
             url
         } else {
-            "mysql://root:pass@127.0.0.1:3306/mysql".into()
+            "mysql://order_manager:b8B32px0kZg@127.0.0.1:3306/orders".into()
         }
     };
 }
