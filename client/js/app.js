@@ -52,6 +52,7 @@
       row.appendChild(createCell(order.subtotal));
       row.appendChild(createCell(order.shipping_address));
       row.appendChild(createCell(order.shipping_zip));
+      row.appendChild(createCell(order.shipping_cost));
       row.appendChild(createCell(order.total));
 
       orderTableBodyEle.appendChild(row);
@@ -70,7 +71,6 @@
 
   function onSaveButton() {
     const data = {
-      order_id : parseFloat(orderIdField.value),
       product_id : parseFloat(productIdField.value),
       quantity : parseFloat(quantityField.value),
       subtotal : parseFloat(subtotalField.value),
