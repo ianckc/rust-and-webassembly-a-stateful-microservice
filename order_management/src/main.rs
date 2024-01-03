@@ -148,6 +148,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
 
         (&Method::GET, "/init") => {
             let mut conn = pool.get_conn().await.unwrap();
+            "CREATE DATABASE IF NOT EXISTS orders;".ignore(&mut conn).await?;
             // "DROP TABLE IF EXISTS orders;".ignore(&mut conn).await?;
             "CREATE TABLE IF NOT EXISTS orders (order_id INT NOT NULL AUTO_INCREMENT, product_id INT, quantity INT, subtotal FLOAT, shipping_address VARCHAR(1024), shipping_zip VARCHAR(32), shipping_cost FLOAT, total FLOAT, PRIMARY KEY (order_id));".ignore(&mut conn).await?;
             drop(conn);
