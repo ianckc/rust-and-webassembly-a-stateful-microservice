@@ -75,25 +75,25 @@ jobs:
     - name: Test the service
       run: |
         echo $'\nRunning init'
-        curl http://localhost:8080/init
+        curl http://127.0.0.1:8003/init
         sleep 5
         echo $'\nRunning create orders'
-        curl http://localhost:8080/create_orders -X POST -d @orders.json
+        curl http://127.0.0.1:8003/create_orders -X POST -d @orders.json
         sleep 5
         echo $'\nRunning orders'
-        curl http://localhost:8080/orders
+        curl http://127.0.0.1:8003/orders
         sleep 5
         echo $'\nRunning delete order'
-        curl http://localhost:8080/delete_order?id=2
+        curl http://127.0.0.1:8003/delete_order?id=2
         sleep 5
         echo $'\nRunning orders'
-        curl http://localhost:8080/orders
+        curl http://127.0.0.1:8003/orders
         sleep 5
         echo $'\nRunning update order'
-        curl http://localhost:8080/update_order -X POST -d @update_order.json
+        curl http://127.0.0.1:8003/update_order -X POST -d @update_order.json
         sleep 5
         echo $'\nRunning orders'
-        curl http://localhost:8080/orders
+        curl http://127.0.0.1:8003/orders
         echo $'\nDone!'
         kill -9 `cat wasmedge.pid`
         rm wasmedge.pid
@@ -107,25 +107,25 @@ jobs:
     - name: Test the service
       run: |
         echo $'\nRunning init'
-        curl http://localhost:8080/init
+        curl http://127.0.0.1:8003/init
         sleep 5
         echo $'\nRunning create orders'
-        curl http://localhost:8080/create_orders -X POST -d @orders.json
+        curl http://127.0.0.1:8003/create_orders -X POST -d @orders.json
         sleep 5
         echo $'\nRunning orders'
-        curl http://localhost:8080/orders
+        curl http://127.0.0.1:8003/orders
         sleep 5
         echo $'\nRunning delete order'
-        curl http://localhost:8080/delete_order?id=2
+        curl http://127.0.0.1:8003/delete_order?id=2
         sleep 5
         echo $'\nRunning orders'
-        curl http://localhost:8080/orders
+        curl http://127.0.0.1:8003/orders
         sleep 5
         echo $'\nRunning update order'
-        curl http://localhost:8080/update_order -X POST -d @update_order.json
+        curl http://127.0.0.1:8003/update_order -X POST -d @update_order.json
         sleep 5
         echo $'\nRunning orders'
-        curl http://localhost:8080/orders
+        curl http://127.0.0.1:8003/orders
         echo $'\nDone!'
         kill -9 `cat wasmedge.pid`
         rm wasmedge.pid
