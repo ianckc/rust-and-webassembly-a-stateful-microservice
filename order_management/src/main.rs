@@ -97,7 +97,8 @@ impl CompletedOrder {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct CompletedOrder {
+struct OrderDetails {
+    order_id: i32,
     product_id: i32,
     quantity: i32,
     subtotal: f32,
