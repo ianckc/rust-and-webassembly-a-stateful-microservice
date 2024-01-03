@@ -64,13 +64,13 @@ jobs:
         nohup wasmedge sales_tax_rate_lookup.wasm &
         echo $! > sales_tax_rate.pid
 
-    - name: order_total
+    - name: order_management
       run: |
-        cd order_total
+        cd order_management
         cargo build --target wasm32-wasi --release
-        wasmedgec target/wasm32-wasi/release/order_total.wasm order_total.wasm
-        nohup wasmedge --env "SALES_TAX_RATE_SERVICE=http://127.0.0.1:8001/find_rate" order_total.wasm &
-        echo $! > order_total.pid
+        wasmedgec target/wasm32-wasi/release/order_management.wasm order_management.wasm
+        nohup wasmedge --env "SALES_TAX_RATE_SERVICE=http://127.0.0.1:8001/find_rate" order_management.wasm &
+        echo $! > order_management.pid
         
     - name: Test the service
       run: |
