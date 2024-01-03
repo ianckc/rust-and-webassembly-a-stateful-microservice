@@ -8,7 +8,7 @@ on:
         required: true
         default: 'info'
   push:
-    branches: [ main ]
+    branches: [ main, 3--continuously-build-and-test-the-microservice ]
   pull_request:
     branches: [ main ]
 
