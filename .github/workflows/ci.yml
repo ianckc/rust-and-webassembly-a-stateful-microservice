@@ -40,13 +40,6 @@ jobs:
         mysql -e "SET @@GLOBAL.GTID_MODE = ON;" -uroot -proot
         mysql -e "PURGE BINARY LOGS BEFORE now();" -uroot -proot
     
-    - name: Install and run TiDB
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
-        source ~/.profile
-        tiup playground $(DB_VERSION) --db 1 --pd 1 --kv 1 &
-        while ! nc -W 1 localhost 4000 | grep -q -P '.+'; do sleep 1; done
-    
     - name: Install Rust target for wasm
       run: |
         rustup target add wasm32-wasi
@@ -74,58 +67,18 @@ jobs:
         
     - name: Test the service
       run: |
+      sleep 15
         echo $'\nRunning init'
-        curl http://127.0.0.1:8003/init
-        sleep 5
-        echo $'\nRunning create orders'
-        curl http://127.0.0.1:8003/create_orders -X POST -d @orders.json
-        sleep 5
-        echo $'\nRunning orders'
-        curl http://127.0.0.1:8003/orders
-        sleep 5
-        echo $'\nRunning delete order'
-        curl http://127.0.0.1:8003/delete_order?id=2
-        sleep 5
-        echo $'\nRunning orders'
-        curl http://127.0.0.1:8003/orders
-        sleep 5
-        echo $'\nRunning update order'
-        curl http://127.0.0.1:8003/update_order -X POST -d @update_order.json
-        sleep 5
-        echo $'\nRunning orders'
-        curl http://127.0.0.1:8003/orders
+        resp=$(curl http://127.0.0.1:8003/init)
+        echo "$resp"
+        if [[ $resp == *'{"status":"true"}'* ]]; then
+          echo -e "Execution Success!"
+        else
+          echo -e "Execution Fail!"
+          exit 1
+        fi
         echo $'\nDone!'
-        kill -9 `cat wasmedge.pid`
-        rm wasmedge.pid
-
-    - name: Run the microservice on TiDB
-      run: |
-        nohup wasmedge --env "DATABASE_URL=mysql://root@127.0.0.1:4000/mysql" order_demo_service.wasm &
-        echo $! > wasmedge.pid
-        sleep 15
-
-    - name: Test the service
-      run: |
-        echo $'\nRunning init'
-        curl http://127.0.0.1:8003/init
-        sleep 5
-        echo $'\nRunning create orders'
-        curl http://127.0.0.1:8003/create_orders -X POST -d @orders.json
-        sleep 5
-        echo $'\nRunning orders'
-        curl http://127.0.0.1:8003/orders
-        sleep 5
-        echo $'\nRunning delete order'
-        curl http://127.0.0.1:8003/delete_order?id=2
-        sleep 5
-        echo $'\nRunning orders'
-        curl http://127.0.0.1:8003/orders
-        sleep 5
-        echo $'\nRunning update order'
-        curl http://127.0.0.1:8003/update_order -X POST -d @update_order.json
-        sleep 5
-        echo $'\nRunning orders'
-        curl http://127.0.0.1:8003/orders
-        echo $'\nDone!'
-        kill -9 `cat wasmedge.pid`
-        rm wasmedge.pid
+        kill -9 `cat sales_tax_rate/sales_tax_rate.pid`
+        rm sales_tax_rate/sales_tax_rate.pid
+        kill -9 `cat order_management/order_management.pid`
+        rm order_management/order_management.pid
