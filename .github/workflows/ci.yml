@@ -71,7 +71,7 @@ jobs:
         echo $'\nRunning init'
         resp=$(curl http://127.0.0.1:8003/init)
         echo "$resp"
-        if [[ $resp == *'{"status":"true"}'* ]]; then
+        if [[ $resp == *'{"status":true}'* ]]; then
           echo -e "Execution Success!"
         else
           echo -e "Execution Fail!"
