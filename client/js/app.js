@@ -5,7 +5,6 @@
   const orderTableEle = document.getElementById("order-table");
   const orderTableBodyEle = document.querySelector("#order-table tbody");
 
-  const orderIdField = document.getElementById("order-id");
   const productIdField = document.getElementById("product-id");
   const quantityField = document.getElementById("quantity");
   const subtotalField = document.getElementById("subtotal");
@@ -52,7 +51,6 @@
       row.appendChild(createCell(order.subtotal));
       row.appendChild(createCell(order.shipping_address));
       row.appendChild(createCell(order.shipping_zip));
-      row.appendChild(createCell(order.shipping_cost));
       row.appendChild(createCell(order.total));
 
       orderTableBodyEle.appendChild(row);

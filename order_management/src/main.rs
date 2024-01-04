@@ -11,6 +11,8 @@ pub use mysql_async::prelude::*;
 pub use mysql_async::*;
 use serde::{Deserialize, Serialize};
 
+const SHIPPING_COST: f32 = 5.5;
+
 lazy_static! {
     static ref SALES_TAX_RATE_SERVICE: String = {
         if let Ok(url) = std::env::var("SALES_TAX_RATE_SERVICE") {
@@ -24,8 +26,9 @@ lazy_static! {
         if let Ok(url) = std::env::var("DATABASE_URL") {
             url
         } else {
+            println!("Use default connection");
             // Map port 3307 on host with -p 3306:3307 in Docker command
-            "mysql://root:whalehello@127.0.0.1:3307/orders".into()
+            "mysql://root:whalehello@127.0.0.1:3306/orders".into()
         }
     };
 }
@@ -60,6 +63,75 @@ impl Order {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct CompletedOrder {
+    product_id: i32,
+    quantity: i32,
+    subtotal: f32,
+    shipping_address: String,
+    shipping_zip: String,
+    shipping_cost: f32,
+    total: f32,
+}
+
+impl CompletedOrder {
+    fn new(
+        product_id: i32,
+        quantity: i32,
+        subtotal: f32,
+        shipping_address: String,
+        shipping_zip: String,
+        shipping_cost: f32,
+        total: f32,
+    ) -> Self {
+        Self {
+            product_id,
+            quantity,
+            subtotal,
+            shipping_address,
+            shipping_zip,
+            shipping_cost,
+            total,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct OrderDetails {
+    order_id: i32,
+    product_id: i32,
+    quantity: i32,
+    subtotal: f32,
+    shipping_address: String,
+    shipping_zip: String,
+    shipping_cost: f32,
+    total: f32,
+}
+
+impl OrderDetails {
+    fn new(
+        order_id: i32,
+        product_id: i32,
+        quantity: i32,
+        subtotal: f32,
+        shipping_address: String,
+        shipping_zip: String,
+        shipping_cost: f32,
+        total: f32,
+    ) -> Self {
+        Self {
+            order_id,
+            product_id,
+            quantity,
+            subtotal,
+            shipping_address,
+            shipping_zip,
+            shipping_cost,
+            total,
+        }
+    }
+}
+
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
 async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>, anyhow::Error> {
@@ -76,6 +148,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
 
         (&Method::GET, "/init") => {
             let mut conn = pool.get_conn().await.unwrap();
+            "CREATE DATABASE IF NOT EXISTS orders;".ignore(&mut conn).await?;
             // "DROP TABLE IF EXISTS orders;".ignore(&mut conn).await?;
             "CREATE TABLE IF NOT EXISTS orders (order_id INT NOT NULL AUTO_INCREMENT, product_id INT, quantity INT, subtotal FLOAT, shipping_address VARCHAR(1024), shipping_zip VARCHAR(32), shipping_cost FLOAT, total FLOAT, PRIMARY KEY (order_id));".ignore(&mut conn).await?;
             drop(conn);
@@ -97,23 +170,33 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
                 let rate = rate_resp.text()
                     .await?
                     .parse::<f32>()?;
-                order.total = order.subtotal * (1.0 + rate);
+                order.total = order.subtotal * (1.0 + rate) + SHIPPING_COST;
                 
-                "INSERT INTO orders (product_id, quantity, subtotal, shipping_address, shipping_zip, total) VALUES (:product_id, :quantity, :subtotal, :shipping_address, :shipping_zip, :total)"
+                "INSERT INTO orders (product_id, quantity, subtotal, shipping_address, shipping_zip, shipping_cost, total) VALUES (:product_id, :quantity, :subtotal, :shipping_address, :shipping_zip, :shipping_cost, :total)"
                     .with(params! {
                         "product_id" => order.product_id,
                         "quantity" => order.quantity,
                         "subtotal" => order.subtotal,
                         "shipping_address" => &order.shipping_address,
                         "shipping_zip" => &order.shipping_zip,
-                        "shipping_cost" => 32.5,
+                        "shipping_cost" => SHIPPING_COST,
                         "total" => order.total,
                     })
                     .ignore(&mut conn)
                     .await?;
 
                 drop(conn);
-                Ok(response_build(&serde_json::to_string_pretty(&order)?))
+                let order_response = OrderDetails::new(
+                    0,
+                    order.product_id,
+                    order.quantity,
+                    order.subtotal,
+                    order.shipping_address,
+                    order.shipping_zip,
+                    SHIPPING_COST,
+                    order.total,
+                );
+                Ok(response_build(&serde_json::to_string(&order_response)?))
             } else {
                 if rate_resp.status() == StatusCode::NOT_FOUND {
                     Ok(response_build(&String::from("{\"status\":\"error\", \"message\":\"The zip code in the order does not have a corresponding sales tax rate.\"}")))
@@ -128,13 +211,15 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
 
             let orders = "SELECT * FROM orders"
                 .with(())
-                .map(&mut conn, |(product_id, quantity, subtotal, shipping_address, shipping_zip, total)| {
-                    Order::new(
+                .map(&mut conn, |(order_id, product_id, quantity, subtotal, shipping_address, shipping_zip, shipping_cost, total)| {
+                    OrderDetails::new(
+                        order_id,
                         product_id,
                         quantity,
                         subtotal,
                         shipping_address,
                         shipping_zip,
+                        shipping_cost,
                         total,
                     )},
                 ).await?;
@@ -188,3 +273,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
     Ok(())
 }
+
+// { order_id: Int(1), product_id: Int(321), quantity: Int(2), subtotal: Float(20.0), shipping_address: Bytes("123 Main.."), shipping_zip: Bytes("78701"), shipping_cost: Float(5.5), total: Float(27.15) }
+// ( i32,              i32,                  f32,              alloc::string::String, alloc::string::String,                 f32,                          f32)
