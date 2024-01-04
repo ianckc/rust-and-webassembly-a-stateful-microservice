@@ -69,7 +69,7 @@ jobs:
         cd order_management
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/order_management.wasm order_management.wasm
-        nohup wasmedge --env "SALES_TAX_RATE_SERVICE=http://127.0.0.1:8001/find_rate" order_management.wasm &
+        nohup wasmedge --env "SALES_TAX_RATE_SERVICE=http://127.0.0.1:8001/find_rate" --env "DATABASE_URL=mysql://root:root@127.0.0.1:3306/mysql" order_management.wasm &
         echo $! > order_management.pid
         
     - name: Test the service
