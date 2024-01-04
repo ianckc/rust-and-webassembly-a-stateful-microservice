@@ -67,7 +67,7 @@ jobs:
         
     - name: Test the service
       run: |
-      sleep 15
+        sleep 15
         echo $'\nRunning init'
         resp=$(curl http://127.0.0.1:8003/init)
         echo "$resp"
