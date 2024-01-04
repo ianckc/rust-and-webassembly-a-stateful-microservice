@@ -196,7 +196,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
                     SHIPPING_COST,
                     order.total,
                 );
-                Ok(response_build(&serde_json::to_string_pretty(&order_response)?))
+                Ok(response_build(&serde_json::to_string(&order_response)?))
             } else {
                 if rate_resp.status() == StatusCode::NOT_FOUND {
                     Ok(response_build(&String::from("{\"status\":\"error\", \"message\":\"The zip code in the order does not have a corresponding sales tax rate.\"}")))

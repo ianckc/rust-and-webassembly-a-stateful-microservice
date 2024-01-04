@@ -81,11 +81,21 @@ jobs:
         echo $'\nRunning add order'
         resp=$(curl http://127.0.0.1:8003/create_order -X POST -d @order.json)
         echo "$resp"
-        if [[ $resp == *'{"order_id": 1,"product_id": 321,"quantity": 2,"subtotal": 20.0,"shipping_address": "123 Main St, Anytown USA","shipping_zip": "78701","shipping_cost": 5.5,"total": 27.15}'* ]]; then
-          echo -e "Execution Success!"
+        if [[ $resp == *'{"order_id":0,"product_id":321,"quantity":2,"subtotal":20.0,"shipping_address":"123 Main St, Anytown USA","shipping_zip":"78701","shipping_cost":5.5,"total":27.15}'* ]]; then
+            echo -e "Execution Success!"
         else
-          echo -e "Execution Fail!"
-          exit 1
+            echo -e "Execution Fail!"
+            exit 1
+        fi
+        sleep 15
+        echo $'\nRunning fetch orders'
+        resp=$(curl http://127.0.0.1:8003/orders)
+        echo "$resp"
+        if [[ $resp == *'{"order_id":1,"product_id":321,"quantity":2,"subtotal":20.0,"shipping_address":"123 Main St, Anytown USA","shipping_zip":"78701","shipping_cost":5.5,"total":27.15}'* ]]; then
+            echo -e "Execution Success!"
+        else
+            echo -e "Execution Fail!"
+            exit 1
         fi
         echo $'\nDone!'
         kill -9 `cat sales_tax_rate/sales_tax_rate.pid`
