@@ -186,7 +186,8 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
                     .await?;
 
                 drop(conn);
-                let order_response = CompletedOrder::new(
+                let order_response = OrderDetails::new(
+                    0,
                     order.product_id,
                     order.quantity,
                     order.subtotal,
